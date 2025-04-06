@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Plate Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #preview {
+            max-width: 300px;
+            margin-top: 20px;
+            display: none;
+        }
+        #result {
+            font-size: 20px;
+            margin-top: 20px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Upload an Image for License Plate Recognition</h2>
+
+    <form id="uploadForm">
+        <input type="file" id="imageInput" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <img id="preview" alt="Image Preview">
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const fileInput = document.getElementById('imageInput');
+            if (fileInput.files.length === 0) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/check-in", {  // Adjust FastAPI endpoint as needed
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerText = "Condition:" + result.Success;
+                } else {
+                    document.getElementById('result').innerText = "Error: " + result.detail;
+                    document.getElementById('result').style.color = "red";
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = "Error connecting to server.";
+                document.getElementById('result').style.color = "red";
+            }
+        });
+    </script>
+
+</body>
+</html>
